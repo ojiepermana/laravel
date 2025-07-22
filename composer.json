@@ -1,0 +1,26 @@
+{
+    "name": "ojiepermana/laravel",
+    "description": "Laravel utility package with blade directives, helpers, and services.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "OjiePermana\\Laravel\\": "src/"
+        },
+        "files": [
+            "src/Helpers/format.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "OjiePermana\\Laravel\\LaravelServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^10|^11|^12",
+        "maatwebsite/excel": "^3.1"
+    }
+}

@@ -1,0 +1,117 @@
+# Composer dependencies
+/vendor/
+composer.phar
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Laravel specific
+/storage/*.key
+/storage/app/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+/bootstrap/cache/*
+
+# Node.js dependencies (if using)
+/node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build files
+/public/build/
+/public/hot
+/public/storage
+/public/css/
+/public/js/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+laravel.log
+
+# Testing
+/coverage/
+.phpunit.result.cache
+.phpunit.cache
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# Package files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# PHPStorm
+.idea/
+
+# Sublime Text
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Eclipse
+.settings/
+.project
+.buildpath
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# Visual Studio Code
+.vscode/
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+*~
+Session.vim
+.netrwhist
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Cache
+.cache/
+cache/
