@@ -8,7 +8,7 @@
             "OjiePermana\\Laravel\\": "src/"
         },
         "files": [
-            "src/Helpers/format.php"
+            "src/Helpers/IndonesiaHelper.php"
         ]
     },
     "extra": {
