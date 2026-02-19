@@ -1,8 +1,8 @@
 <?php
 
-namespace OjiePermana\Laravel\Tests\Services;
+namespace OjiePermana\Laravel\Tests\BNI;
 
-use OjiePermana\Laravel\Services\BNIEncryptServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BNIEncryptServices;
 use PHPUnit\Framework\TestCase;
 
 class BNIEncryptServicesTest extends TestCase

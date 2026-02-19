@@ -1,6 +1,6 @@
 <?php
 
-namespace OjiePermana\Laravel\Services;
+namespace OjiePermana\Laravel\Bank\BNI\Billing;
 
 use Illuminate\Support\Facades\Http;
 
@@ -34,7 +34,7 @@ class BNIAPIServices
      * @param  bool        $sendSms         Send SMS notification to customer via BNI SMS Banking (default: false)
      * @return array{status: string, data: array|null}|array{status: string, message: string}
      */
-    public function createBilling(
+    public function create(
         string $trxId,
         string $trxAmount,
         string $billingType,
@@ -80,7 +80,7 @@ class BNIAPIServices
      * @param  string|null $description     Additional info (max 100 chars, optional)
      * @return array{status: string, data: array|null}|array{status: string, message: string}
      */
-    public function updateBilling(
+    public function update(
         string $trxId,
         string $trxAmount,
         string $customerName,
@@ -110,7 +110,7 @@ class BNIAPIServices
      * @param  string $trxId Invoice/billing ID
      * @return array{status: string, data: array|null}|array{status: string, message: string}
      */
-    public function inquiryBilling(string $trxId): array
+    public function show(string $trxId): array
     {
         $data = [
             'type'      => 'inquirybilling',

@@ -1,11 +1,11 @@
 <?php
 
-namespace OjiePermana\Laravel\Tests\Services;
+namespace OjiePermana\Laravel\Tests\BNI;
 
 use Illuminate\Support\Facades\Http;
 use Orchestra\Testbench\TestCase;
-use OjiePermana\Laravel\Services\BNIAPIServices;
-use OjiePermana\Laravel\Services\BNIEncryptServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BNIAPIServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BNIEncryptServices;
 
 class BNIAPIServicesTest extends TestCase
 {
@@ -38,11 +38,11 @@ class BNIAPIServicesTest extends TestCase
     }
 
     // ---------------------------------------------------------------
-    // createBilling
+    // create
     // ---------------------------------------------------------------
 
-    /** createBilling sukses harus mengembalikan virtual_account dan trx_id terdekripsi */
-    public function test_createBilling_success_returns_decrypted_data(): void
+    /** create sukses harus mengembalikan virtual_account dan trx_id terdekripsi */
+    public function test_create_success_returns_decrypted_data(): void
     {
         $expectedData = [
             'virtual_account' => '8001000000000001',
@@ -51,7 +51,7 @@ class BNIAPIServicesTest extends TestCase
 
         Http::fake(['*' => Http::response($this->fakeSuccessResponse($expectedData))]);
 
-        $result = $this->makeService()->createBilling(
+        $result = $this->makeService()->create(
             trxId:        'INV-001',
             trxAmount:    '100000',
             billingType:  'c',
@@ -63,12 +63,12 @@ class BNIAPIServicesTest extends TestCase
         $this->assertSame($expectedData['trx_id'], $result['data']['trx_id']);
     }
 
-    /** createBilling harus mengirim payload terenkripsi dengan field yang benar ke API */
-    public function test_createBilling_sends_correct_encrypted_payload(): void
+    /** create harus mengirim payload terenkripsi dengan field yang benar ke API */
+    public function test_create_sends_correct_encrypted_payload(): void
     {
         Http::fake(['*' => Http::response($this->fakeSuccessResponse(['virtual_account' => '8001000000000001', 'trx_id' => 'INV-001']))]);
 
-        $this->makeService()->createBilling(
+        $this->makeService()->create(
             trxId:           'INV-001',
             trxAmount:       '100000',
             billingType:     'c',
@@ -100,12 +100,12 @@ class BNIAPIServicesTest extends TestCase
         });
     }
 
-    /** createBilling dengan sendSms=true harus menggunakan type createbillingsms */
-    public function test_createBilling_with_sendSms_uses_createbillingsms_type(): void
+    /** create dengan sendSms=true harus menggunakan type createbillingsms */
+    public function test_create_with_sendSms_uses_createbillingsms_type(): void
     {
         Http::fake(['*' => Http::response($this->fakeSuccessResponse(['virtual_account' => '8001000000000001', 'trx_id' => 'INV-002']))]);
 
-        $this->makeService()->createBilling(
+        $this->makeService()->create(
             trxId:        'INV-002',
             trxAmount:    '50000',
             billingType:  'c',
@@ -120,12 +120,12 @@ class BNIAPIServicesTest extends TestCase
         });
     }
 
-    /** createBilling harus mengabaikan field optional yang null — tidak masuk payload terenkripsi */
-    public function test_createBilling_excludes_null_optional_fields(): void
+    /** create harus mengabaikan field optional yang null — tidak masuk payload terenkripsi */
+    public function test_create_excludes_null_optional_fields(): void
     {
         Http::fake(['*' => Http::response($this->fakeSuccessResponse(['virtual_account' => '8001000000000001', 'trx_id' => 'INV-003']))]);
 
-        $this->makeService()->createBilling(
+        $this->makeService()->create(
             trxId:        'INV-003',
             trxAmount:    '75000',
             billingType:  'o',
@@ -147,11 +147,11 @@ class BNIAPIServicesTest extends TestCase
     }
 
     // ---------------------------------------------------------------
-    // updateBilling
+    // update
     // ---------------------------------------------------------------
 
-    /** updateBilling sukses harus mengembalikan virtual_account dan trx_id terdekripsi */
-    public function test_updateBilling_success_returns_decrypted_data(): void
+    /** update sukses harus mengembalikan virtual_account dan trx_id terdekripsi */
+    public function test_update_success_returns_decrypted_data(): void
     {
         $expectedData = [
             'virtual_account' => '8001000000000001',
@@ -160,7 +160,7 @@ class BNIAPIServicesTest extends TestCase
 
         Http::fake(['*' => Http::response($this->fakeSuccessResponse($expectedData))]);
 
-        $result = $this->makeService()->updateBilling(
+        $result = $this->makeService()->update(
             trxId:        'INV-001',
             trxAmount:    '150000',
             customerName: 'Budi Santoso',
@@ -171,12 +171,12 @@ class BNIAPIServicesTest extends TestCase
         $this->assertSame($expectedData['trx_id'], $result['data']['trx_id']);
     }
 
-    /** updateBilling harus mengirim type=updatebilling dan field mandatory yang benar */
-    public function test_updateBilling_sends_correct_type_and_fields(): void
+    /** update harus mengirim type=updatebilling dan field mandatory yang benar */
+    public function test_update_sends_correct_type_and_fields(): void
     {
         Http::fake(['*' => Http::response($this->fakeSuccessResponse(['virtual_account' => '8001000000000001', 'trx_id' => 'INV-001']))]);
 
-        $this->makeService()->updateBilling(
+        $this->makeService()->update(
             trxId:           'INV-001',
             trxAmount:       '150000',
             customerName:    'Budi Santoso',
@@ -198,11 +198,11 @@ class BNIAPIServicesTest extends TestCase
     }
 
     // ---------------------------------------------------------------
-    // inquiryBilling
+    // show
     // ---------------------------------------------------------------
 
-    /** inquiryBilling sukses harus mengembalikan data billing lengkap terdekripsi */
-    public function test_inquiryBilling_success_returns_full_decrypted_data(): void
+    /** show sukses harus mengembalikan data billing lengkap terdekripsi */
+    public function test_show_success_returns_full_decrypted_data(): void
     {
         $expectedData = [
             'client_id'                    => '001',
@@ -225,7 +225,7 @@ class BNIAPIServicesTest extends TestCase
 
         Http::fake(['*' => Http::response($this->fakeSuccessResponse($expectedData))]);
 
-        $result = $this->makeService()->inquiryBilling('INV-001');
+        $result = $this->makeService()->show('INV-001');
 
         $this->assertSame('000', $result['status']);
         $this->assertSame('INV-001', $result['data']['trx_id']);
@@ -234,12 +234,12 @@ class BNIAPIServicesTest extends TestCase
         $this->assertSame('1', $result['data']['va_status']);
     }
 
-    /** inquiryBilling harus mengirim type=inquirybilling dan trx_id yang benar */
-    public function test_inquiryBilling_sends_correct_type_and_trx_id(): void
+    /** show harus mengirim type=inquirybilling dan trx_id yang benar */
+    public function test_show_sends_correct_type_and_trx_id(): void
     {
         Http::fake(['*' => Http::response($this->fakeSuccessResponse(['trx_id' => 'INV-001']))]);
 
-        $this->makeService()->inquiryBilling('INV-001');
+        $this->makeService()->show('INV-001');
 
         Http::assertSent(function ($request) {
             $decrypted = BNIEncryptServices::Dec($request->data()['data'], $this->clientId, $this->secretKey);
@@ -262,7 +262,7 @@ class BNIAPIServicesTest extends TestCase
         $errorResponse = ['status' => '101', 'message' => 'Billing not found.'];
         Http::fake(['*' => Http::response($errorResponse)]);
 
-        $result = $this->makeService()->inquiryBilling('TIDAK-ADA');
+        $result = $this->makeService()->show('TIDAK-ADA');
 
         $this->assertSame('101', $result['status']);
         $this->assertSame('Billing not found.', $result['message']);
@@ -273,7 +273,7 @@ class BNIAPIServicesTest extends TestCase
     {
         Http::fake(['*' => Http::response(['status' => '001', 'message' => 'Incomplete/invalid Parameter(s).'])]);
 
-        $result = $this->makeService()->createBilling(
+        $result = $this->makeService()->create(
             trxId:        'INV-ERR',
             trxAmount:    '0',
             billingType:  'c',
@@ -293,7 +293,7 @@ class BNIAPIServicesTest extends TestCase
     {
         Http::fake(['*' => Http::response($this->fakeSuccessResponse(['trx_id' => 'INV-001', 'virtual_account' => '8001000000000001']))]);
 
-        $this->makeService()->inquiryBilling('INV-001');
+        $this->makeService()->show('INV-001');
 
         Http::assertSent(function ($request) {
             $this->assertSame($this->fakeUrl, $request->url());
@@ -307,7 +307,7 @@ class BNIAPIServicesTest extends TestCase
     {
         Http::fake(['*' => Http::response($this->fakeSuccessResponse(['trx_id' => 'INV-001', 'virtual_account' => '8001000000000001']))]);
 
-        $this->makeService()->createBilling(
+        $this->makeService()->create(
             trxId:        'INV-001',
             trxAmount:    '100000',
             billingType:  'c',

@@ -7,6 +7,7 @@ Paket utilitas Laravel berisi:
 - Helper Indonesia untuk format tanggal, angka, dan utilitas lainnya
 - Service `ExcelExportService` untuk export Excel
 - Service `BNIEncryptServices` untuk enkripsi/dekripsi BNI e-Collection
+- **Google Cloud Storage** — Laravel filesystem adapter untuk GCS (`Storage::disk('gcs')`)
 
 ## Instalasi
 
@@ -175,7 +176,17 @@ IndonesiaHelper::jumlahHari2Tanggal('2026-02-01', '2026-02-28');
 Service untuk integrasi BNI e-Collection API (create, update, inquiry billing Virtual Account).
 
 ```php
-use OjiePermana\Laravel\Services\BNIAPIServices;
+use OjiePermana\Laravel\Facades\BNI;
+
+BNI::create(trxId: 'INV-001', trxAmount: '150000', billingType: 'c', customerName: 'Budi');
+BNI::update(trxId: 'INV-001', trxAmount: '200000', customerName: 'Budi');
+BNI::show('INV-001');
+```
+
+Atau manual tanpa Facade:
+
+```php
+use OjiePermana\Laravel\BNI\BNIAPIServices;
 
 $bni = new BNIAPIServices(
     clientId:  env('BNI_CLIENT_ID'),
@@ -183,23 +194,58 @@ $bni = new BNIAPIServices(
     prefix:    env('BNI_PREFIX'),
     url:       env('BNI_ECOLLECTION_URL'),
 );
-
-$bni->createBilling(trxId: 'INV-001', trxAmount: '150000', billingType: 'c', customerName: 'Budi');
-$bni->updateBilling(trxId: 'INV-001', trxAmount: '200000', customerName: 'Budi');
-$bni->inquiryBilling('INV-001');
 ```
 
-Dokumentasi lengkap: [Docs/BNI/API/README.md](Docs/BNI/API/README.md)
+Dokumentasi lengkap: [Docs/Bank/BNI/README.md](Docs/Bank/BNI/README.md)
 
 ### BNI e-Collection — Enkripsi
 
 Service untuk enkripsi dan dekripsi data transaksi BNI Virtual Account secara manual.
 
 ```php
-use OjiePermana\Laravel\Services\BNIEncryptServices;
+use OjiePermana\Laravel\BNI\BNIEncryptServices;
 
 $hashed = BNIEncryptServices::Enc($data, $client_id, $secret_key);
 $result = BNIEncryptServices::Dec($hashed_string, $client_id, $secret_key);
 ```
 
-Dokumentasi lengkap: [Docs/BNI/Encrypt/README.md](Docs/BNI/Encrypt/README.md)
+Dokumentasi lengkap: [Docs/Bank/BNI/README.md](Docs/Bank/BNI/README.md)
+
+### Google Cloud Storage
+
+Laravel filesystem adapter untuk Google Cloud Storage. Terintegrasi penuh dengan `Storage::disk()` standar Laravel.
+
+```php
+use Illuminate\Support\Facades\Storage;
+use OjiePermana\Laravel\Facades\GCS;
+
+// Upload file
+Storage::disk('gcs')->put('images/foto.jpg', $contents);
+GCS::putFile('uploads', $request->file('dokumen'));
+
+// URL publik
+$url = Storage::disk('gcs')->url('images/foto.jpg');
+
+// Baca, hapus, copy, move
+$data = Storage::disk('gcs')->get('documents/laporan.pdf');
+Storage::disk('gcs')->delete('temp/file.txt');
+Storage::disk('gcs')->copy('original.jpg', 'backup/original.jpg');
+
+// Signed URL untuk file private
+$signedUrl = Storage::disk('gcs-private')->getAdapter()->signedUrl('contracts/kontrak.pdf', 3600);
+```
+
+Konfigurasi di `config/filesystems.php`:
+
+```php
+'gcs' => [
+    'driver'      => 'gcs',
+    'project_id'  => env('GCS_PROJECT_ID'),
+    'key_file'    => env('GCS_KEY_FILE'),
+    'bucket'      => env('GCS_BUCKET'),
+    'path_prefix' => env('GCS_PATH_PREFIX', ''),
+    'visibility'  => 'public',
+],
+```
+
+Dokumentasi lengkap: [Docs/Storage/Google/README.md](Docs/Storage/Google/README.md)

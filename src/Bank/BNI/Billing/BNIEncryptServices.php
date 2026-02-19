@@ -1,6 +1,6 @@
 <?php
 
-namespace OjiePermana\Laravel\Services;
+namespace OjiePermana\Laravel\Bank\BNI\Billing;
 
 class BNIEncryptServices
 {

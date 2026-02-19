@@ -24,12 +24,18 @@
         "laravel": {
             "providers": [
                 "OjiePermana\\Laravel\\LaravelServiceProvider"
-            ]
+            ],
+            "aliases": {
+                "GCS": "OjiePermana\\Laravel\\Facades\\GCS",
+                "BNI": "OjiePermana\\Laravel\\Facades\\BNI"
+            }
         }
     },
     "require": {
         "php": "^8.1",
         "illuminate/support": "^10|^11|^12",
-        "maatwebsite/excel": "^3.1"
+        "maatwebsite/excel": "^3.1",
+        "google/cloud-storage": "^1.49",
+        "league/flysystem": "^3.0"
     }
 }
