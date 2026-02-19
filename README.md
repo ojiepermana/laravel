@@ -6,6 +6,7 @@ Paket utilitas Laravel berisi:
 - Helper global `format_rupiah()`
 - Helper Indonesia untuk format tanggal, angka, dan utilitas lainnya
 - Service `ExcelExportService` untuk export Excel
+- Service `BNIEncryptServices` untuk enkripsi/dekripsi BNI e-Collection
 
 ## Instalasi
 
@@ -29,7 +30,8 @@ composer require ojiepermana/laravel:*
 ```
 
 Output:
-```
+
+```text
 Rp 1.500.000
 ```
 
@@ -168,3 +170,36 @@ IndonesiaHelper::jumlahHari2Tanggal('2026-02-01', '2026-02-28');
 // dll.
 ```
 
+### BNI e-Collection — API
+
+Service untuk integrasi BNI e-Collection API (create, update, inquiry billing Virtual Account).
+
+```php
+use OjiePermana\Laravel\Services\BNIAPIServices;
+
+$bni = new BNIAPIServices(
+    clientId:  env('BNI_CLIENT_ID'),
+    secretKey: env('BNI_SECRET_KEY'),
+    prefix:    env('BNI_PREFIX'),
+    url:       env('BNI_ECOLLECTION_URL'),
+);
+
+$bni->createBilling(trxId: 'INV-001', trxAmount: '150000', billingType: 'c', customerName: 'Budi');
+$bni->updateBilling(trxId: 'INV-001', trxAmount: '200000', customerName: 'Budi');
+$bni->inquiryBilling('INV-001');
+```
+
+Dokumentasi lengkap: [Docs/BNI/API/README.md](Docs/BNI/API/README.md)
+
+### BNI e-Collection — Enkripsi
+
+Service untuk enkripsi dan dekripsi data transaksi BNI Virtual Account secara manual.
+
+```php
+use OjiePermana\Laravel\Services\BNIEncryptServices;
+
+$hashed = BNIEncryptServices::Enc($data, $client_id, $secret_key);
+$result = BNIEncryptServices::Dec($hashed_string, $client_id, $secret_key);
+```
+
+Dokumentasi lengkap: [Docs/BNI/Encrypt/README.md](Docs/BNI/Encrypt/README.md)
