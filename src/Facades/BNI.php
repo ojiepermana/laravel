@@ -5,20 +5,22 @@ declare(strict_types=1);
 namespace OjiePermana\Laravel\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use OjiePermana\Laravel\Bank\BNI\Billing\BNIAPIServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BniBillingClient;
 
 /**
  * BNI eCollection API Facade.
  *
- * Proxies to BNIAPIServices bound in the service container.
+ * Proxies to BniBillingClient bound in the service container.
  *
  * Configuration (config/bni.php):
  *
  *   return [
- *       'client_id'  => env('BNI_CLIENT_ID'),
- *       'secret_key' => env('BNI_SECRET_KEY'),
- *       'prefix'     => env('BNI_PREFIX'),
- *       'url'        => env('BNI_ECOLLECTION_URL', ''),
+ *       'billing' => [
+ *           'client_id'  => env('BNI_BILLING_CLIENT_ID'),
+ *           'secret_key' => env('BNI_BILLING_SECRET_KEY'),
+ *           'prefix'     => env('BNI_BILLING_PREFIX'),
+ *           'url'        => env('BNI_BILLING_URL', ''),
+ *       ],
  *   ];
  *
  * Usage:
@@ -45,7 +47,7 @@ use OjiePermana\Laravel\Bank\BNI\Billing\BNIAPIServices;
  * @method static array update(string $trxId, string $trxAmount, string $customerName, ?string $customerEmail = null, ?string $customerPhone = null, ?string $datetimeExpired = null, ?string $description = null)
  * @method static array show(string $trxId)
  *
- * @see BNIAPIServices
+ * @see BniBillingClient
  */
 class BNI extends Facade
 {

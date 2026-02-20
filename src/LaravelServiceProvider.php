@@ -9,7 +9,7 @@ use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Visibility;
 use OjiePermana\Laravel\Directives\CurrencyDirective;
-use OjiePermana\Laravel\Bank\BNI\Billing\BNIAPIServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BniBillingClient;
 use OjiePermana\Laravel\Storage\GoogleCloudStorageAdapter;
 
 class LaravelServiceProvider extends ServiceProvider
@@ -57,12 +57,13 @@ class LaravelServiceProvider extends ServiceProvider
 
         $this->app->singleton('bni.api', function ($app) {
             $config = $app['config']['bni'];
+            $billing = $config['billing'] ?? $config;
 
-            return new BNIAPIServices(
-                clientId:  $config['client_id']  ?? '',
-                secretKey: $config['secret_key'] ?? '',
-                prefix:    $config['prefix']     ?? '',
-                url:       $config['url']        ?? '',
+            return new BniBillingClient(
+                clientId:  $billing['client_id']  ?? '',
+                secretKey: $billing['secret_key'] ?? '',
+                prefix:    $billing['prefix']     ?? '',
+                url:       $billing['url']        ?? '',
             );
         });
 

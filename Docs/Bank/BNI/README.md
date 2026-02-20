@@ -15,8 +15,8 @@ Integrasi BNI e-Collection API — membuat, mengupdate, dan mengecek status bill
   - [update](#update)
   - [show](#show)
 - [Enkripsi](#enkripsi)
-  - [Enc](#enc)
-  - [Dec](#dec)
+    - [encryptPayload](#encryptpayload)
+    - [decryptPayload](#decryptpayload)
   - [Contoh Alur Lengkap](#contoh-alur-lengkap)
 - [Response Format](#response-format)
 - [Jenis Billing](#jenis-billing)
@@ -30,26 +30,61 @@ Integrasi BNI e-Collection API — membuat, mengupdate, dan mengecek status bill
 Tambahkan variabel berikut ke file `.env`:
 
 ```env
-BNI_CLIENT_ID=001
-BNI_SECRET_KEY=ea0c88921fb033387e66ef7d1e82ab83
-BNI_PREFIX=8
-BNI_ECOLLECTION_URL=https://apibeta.bni-ecollection.com/
+BNI_BILLING_CLIENT_ID=001
+BNI_BILLING_SECRET_KEY=ea0c88921fb033387e66ef7d1e82ab83
+BNI_BILLING_PREFIX=8
+BNI_BILLING_URL=https://apibeta.bni-ecollection.com/
 ```
 
 > Untuk production, ganti URL menjadi `https://api.bni-ecollection.com/`
 
 | Variabel | Keterangan |
 |---|---|
-| `BNI_CLIENT_ID` | Client ID diberikan oleh BNI (2, 3, atau 5 digit) |
-| `BNI_SECRET_KEY` | Secret key 32 karakter hexadecimal dari BNI |
-| `BNI_PREFIX` | Prefix nomor Virtual Account dari BNI |
-| `BNI_ECOLLECTION_URL` | URL API BNI e-Collection (dev/production) |
+| `BNI_BILLING_CLIENT_ID` | Client ID diberikan oleh BNI (2, 3, atau 5 digit) |
+| `BNI_BILLING_SECRET_KEY` | Secret key 32 karakter hexadecimal dari BNI |
+| `BNI_BILLING_PREFIX` | Prefix nomor Virtual Account dari BNI |
+| `BNI_BILLING_URL` | URL API BNI e-Collection (dev/production) |
+
+> Catatan: Billing dan Payment sekarang berbagi satu file konfigurasi `config/bni.php`,
+> dengan namespace `bni.billing.*` untuk e-Collection dan `bni.payment.*` untuk payment H2H.
 
 Publish config (opsional):
 
 ```bash
 php artisan vendor:publish --tag=bni-config
 ```
+
+### Konfigurasi Terpadu BNI (Billing + Payment)
+
+Semua konfigurasi BNI sekarang berada di satu file `config/bni.php` dengan dua namespace:
+
+- `bni.billing.*` untuk e-Collection (VA billing)
+- `bni.payment.*` untuk OGP H2H v2 (payment gateway)
+
+Struktur singkat:
+
+```php
+return [
+    'billing' => [
+        'client_id' => env('BNI_BILLING_CLIENT_ID'),
+        'secret_key' => env('BNI_BILLING_SECRET_KEY'),
+        'prefix' => env('BNI_BILLING_PREFIX'),
+        'url' => env('BNI_BILLING_URL', ''),
+    ],
+    'payment' => [
+        'base_url' => env('BNI_PAYMENT_BASE_URL'),
+        'oauth_url' => env('BNI_PAYMENT_OAUTH_URL', env('BNI_PAYMENT_BASE_URL') . '/api/oauth/token'),
+        'client_id' => env('BNI_PAYMENT_CLIENT_ID'),
+        'client_secret' => env('BNI_PAYMENT_CLIENT_SECRET'),
+        'api_key' => env('BNI_PAYMENT_API_KEY'),
+        'api_secret' => env('BNI_PAYMENT_API_SECRET'),
+        'client_name' => env('BNI_PAYMENT_CLIENT_NAME'),
+        'client_id_prefix' => env('BNI_PAYMENT_CLIENT_ID_PREFIX', 'IDBNI'),
+    ],
+];
+```
+
+Dengan struktur ini, konfigurasi billing dan payment tidak saling menimpa saat dipakai bersamaan.
 
 ---
 
@@ -70,13 +105,13 @@ BNI::show(...);
 ### Manual / Injection
 
 ```php
-use OjiePermana\Laravel\BNI\BNIAPIServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BniBillingClient;
 
-$bni = new BNIAPIServices(
-    clientId:  env('BNI_CLIENT_ID'),
-    secretKey: env('BNI_SECRET_KEY'),
-    prefix:    env('BNI_PREFIX'),
-    url:       env('BNI_ECOLLECTION_URL'),
+$bni = new BniBillingClient(
+    clientId:  env('BNI_BILLING_CLIENT_ID'),
+    secretKey: env('BNI_BILLING_SECRET_KEY'),
+    prefix:    env('BNI_BILLING_PREFIX'),
+    url:       env('BNI_BILLING_URL'),
 );
 ```
 
@@ -86,11 +121,11 @@ Atau daftarkan sebagai singleton di `AppServiceProvider` lalu inject via constru
 // app/Providers/AppServiceProvider.php
 public function register(): void
 {
-    $this->app->singleton(BNIAPIServices::class, fn () => new BNIAPIServices(
-        clientId:  env('BNI_CLIENT_ID'),
-        secretKey: env('BNI_SECRET_KEY'),
-        prefix:    env('BNI_PREFIX'),
-        url:       env('BNI_ECOLLECTION_URL'),
+    $this->app->singleton(BniBillingClient::class, fn () => new BniBillingClient(
+        clientId:  env('BNI_BILLING_CLIENT_ID'),
+        secretKey: env('BNI_BILLING_SECRET_KEY'),
+        prefix:    env('BNI_BILLING_PREFIX'),
+        url:       env('BNI_BILLING_URL'),
     ));
 }
 ```
@@ -98,7 +133,7 @@ public function register(): void
 ```php
 class PaymentController extends Controller
 {
-    public function __construct(private BNIAPIServices $bni) {}
+    public function __construct(private BniBillingClient $bni) {}
 }
 ```
 
@@ -300,29 +335,29 @@ $result = BNI::show('INV-2025-001');
 
 ## Enkripsi
 
-`BNIEncryptServices` menangani enkripsi dan dekripsi data transaksi secara otomatis di balik layar. Bisa juga digunakan langsung, misalnya untuk handle callback dari BNI.
+`BniBillingEncryptor` menangani enkripsi dan dekripsi data transaksi secara otomatis di balik layar. Bisa juga digunakan langsung, misalnya untuk handle callback dari BNI.
 
 ```php
-use OjiePermana\Laravel\BNI\BNIEncryptServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BniBillingEncryptor;
 ```
 
-### Enc
+### encryptPayload
 
 Mengenkripsi array data menggunakan `client_id` dan `secret_key`.
 
 ```php
-$hashed = BNIEncryptServices::Enc($data, $client_id, $secret_key);
+$hashed = BniBillingEncryptor::encryptPayload($data, $client_id, $secret_key);
 // Mengembalikan string terenkripsi
 ```
 
 > Setiap pemanggilan menghasilkan string berbeda karena menyertakan timestamp saat itu.
 
-### Dec
+### decryptPayload
 
 Mendekripsi string hasil enkripsi BNI menjadi array data asli.
 
 ```php
-$result = BNIEncryptServices::Dec($hashed_string, $client_id, $secret_key);
+$result = BniBillingEncryptor::decryptPayload($hashed_string, $client_id, $secret_key);
 // Mengembalikan array | null
 ```
 
@@ -336,13 +371,13 @@ $result = BNIEncryptServices::Dec($hashed_string, $client_id, $secret_key);
 #### Handle Callback dari BNI
 
 ```php
-use OjiePermana\Laravel\BNI\BNIEncryptServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BniBillingEncryptor;
 use Illuminate\Http\Request;
 
 public function callback(Request $request)
 {
-    $client_id  = env('BNI_CLIENT_ID');
-    $secret_key = env('BNI_SECRET_KEY');
+    $client_id  = env('BNI_BILLING_CLIENT_ID');
+    $secret_key = env('BNI_BILLING_SECRET_KEY');
 
     $payload = $request->json()->all();
 
@@ -350,7 +385,7 @@ public function callback(Request $request)
         return response()->json(['status' => '999', 'message' => 'Unauthorized']);
     }
 
-    $data = BNIEncryptServices::Dec($payload['data'], $client_id, $secret_key);
+    $data = BniBillingEncryptor::decryptPayload($payload['data'], $client_id, $secret_key);
 
     if (!$data) {
         return response()->json(['status' => '999', 'message' => 'Dekripsi gagal']);
@@ -457,7 +492,7 @@ Configuration: phpunit.xml
 OK (127 tests, 350 assertions)
 ```
 
-### BNIAPIServices
+### BniBillingClient
 
 | # | Test Case | Status |
 |---|---|---|
@@ -474,32 +509,32 @@ OK (127 tests, 350 assertions)
 | 11 | Request dikirim ke URL yang benar dengan `Content-Type: application/json` | PASS |
 | 12 | Payload selalu mengandung `client_id`, `prefix`, dan `data` | PASS |
 
-### BNIEncryptServices
+### BniBillingEncryptor
 
 | # | Test Case | Status |
 |---|---|---|
-| 1 | `Enc` mengembalikan string non-empty | PASS |
-| 2 | `Enc` menghasilkan output berbeda setiap pemanggilan | PASS |
-| 3 | `Enc` dengan array kosong tetap mengembalikan string | PASS |
-| 4 | `Enc` dengan `client_id` berbeda menghasilkan output berbeda | PASS |
-| 5 | `Enc` dengan `secret_key` berbeda menghasilkan output berbeda | PASS |
-| 6 | `Enc` → `Dec` mengembalikan data asli (roundtrip lengkap) | PASS |
+| 1 | `encryptPayload` mengembalikan string non-empty | PASS |
+| 2 | `encryptPayload` menghasilkan output berbeda setiap pemanggilan | PASS |
+| 3 | `encryptPayload` dengan array kosong tetap mengembalikan string | PASS |
+| 4 | `encryptPayload` dengan `client_id` berbeda menghasilkan output berbeda | PASS |
+| 5 | `encryptPayload` dengan `secret_key` berbeda menghasilkan output berbeda | PASS |
+| 6 | `encryptPayload` → `decryptPayload` mengembalikan data asli (roundtrip lengkap) | PASS |
 | 7 | Roundtrip dengan data minimal (1 key) | PASS |
 | 8 | Roundtrip dengan array kosong | PASS |
 | 9 | Roundtrip dengan karakter spesial (`&`, `<`, `"`, unicode) | PASS |
 | 10 | Roundtrip dengan nilai numerik (int, float) | PASS |
-| 11 | `Dec` dengan `client_id` salah mengembalikan `null` | PASS |
-| 12 | `Dec` dengan `secret_key` salah mengembalikan `null` | PASS |
-| 13 | `Dec` dengan string acak mengembalikan `null` | PASS |
-| 14 | `Dec` dengan string kosong mengembalikan `null` | PASS |
+| 11 | `decryptPayload` dengan `client_id` salah mengembalikan `null` | PASS |
+| 12 | `decryptPayload` dengan `secret_key` salah mengembalikan `null` | PASS |
+| 13 | `decryptPayload` dengan string acak mengembalikan `null` | PASS |
+| 14 | `decryptPayload` dengan string kosong mengembalikan `null` | PASS |
 
 ---
 
 ## Referensi
 
-- [`src/BNI/BNIAPIServices.php`](../../../src/BNI/BNIAPIServices.php)
-- [`src/BNI/BNIEncryptServices.php`](../../../src/BNI/BNIEncryptServices.php)
+- [`src/Bank/BNI/Billing/BniBillingClient.php`](../../../src/Bank/BNI/Billing/BniBillingClient.php)
+- [`src/Bank/BNI/Billing/BniBillingEncryptor.php`](../../../src/Bank/BNI/Billing/BniBillingEncryptor.php)
 - [`src/Facades/BNI.php`](../../../src/Facades/BNI.php)
-- [`tests/BNI/BNIAPIServicesTest.php`](../../../tests/BNI/BNIAPIServicesTest.php)
-- [`tests/BNI/BNIEncryptServicesTest.php`](../../../tests/BNI/BNIEncryptServicesTest.php)
+- [`tests/BNI/BniBillingClientTest.php`](../../../tests/BNI/BniBillingClientTest.php)
+- [`tests/BNI/BniBillingEncryptorTest.php`](../../../tests/BNI/BniBillingEncryptorTest.php)
 - Spesifikasi resmi: BNI eCollection Technical Specification v3.0.6

@@ -6,7 +6,7 @@ Paket utilitas Laravel berisi:
 - Helper global `format_rupiah()`
 - Helper Indonesia untuk format tanggal, angka, dan utilitas lainnya
 - Service `ExcelExportService` untuk export Excel
-- Service `BNIEncryptServices` untuk enkripsi/dekripsi BNI e-Collection
+- Service `BniBillingEncryptor` untuk enkripsi/dekripsi BNI e-Collection
 - **Google Cloud Storage** — Laravel filesystem adapter untuk GCS (`Storage::disk('gcs')`)
 
 ## Instalasi
@@ -175,6 +175,11 @@ IndonesiaHelper::jumlahHari2Tanggal('2026-02-01', '2026-02-28');
 
 Service untuk integrasi BNI e-Collection API (create, update, inquiry billing Virtual Account).
 
+Konfigurasi billing dan payment sekarang disatukan di `config/bni.php`:
+
+- Billing: `bni.billing.*`
+- Payment H2H: `bni.payment.*`
+
 ```php
 use OjiePermana\Laravel\Facades\BNI;
 
@@ -186,14 +191,32 @@ BNI::show('INV-001');
 Atau manual tanpa Facade:
 
 ```php
-use OjiePermana\Laravel\BNI\BNIAPIServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BniBillingClient;
 
-$bni = new BNIAPIServices(
-    clientId:  env('BNI_CLIENT_ID'),
-    secretKey: env('BNI_SECRET_KEY'),
-    prefix:    env('BNI_PREFIX'),
-    url:       env('BNI_ECOLLECTION_URL'),
+$bni = new BniBillingClient(
+    clientId:  env('BNI_BILLING_CLIENT_ID'),
+    secretKey: env('BNI_BILLING_SECRET_KEY'),
+    prefix:    env('BNI_BILLING_PREFIX'),
+    url:       env('BNI_BILLING_URL'),
 );
+```
+
+Contoh `.env` minimum:
+
+```env
+# Billing (e-Collection)
+BNI_BILLING_CLIENT_ID=001
+BNI_BILLING_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+BNI_BILLING_PREFIX=8
+BNI_BILLING_URL=https://apibeta.bni-ecollection.com/
+
+BNI_PAYMENT_OAUTH_URL=https://<host-payment>/api/oauth/token
+BNI_PAYMENT_CLIENT_ID=your-client-id
+BNI_PAYMENT_CLIENT_SECRET=your-client-secret
+BNI_PAYMENT_API_KEY=your-api-key
+BNI_PAYMENT_API_SECRET=your-api-secret
+BNI_PAYMENT_CLIENT_NAME=your-client-name
+BNI_PAYMENT_CLIENT_ID_PREFIX=IDBNI
 ```
 
 Dokumentasi lengkap: [Docs/Bank/BNI/README.md](Docs/Bank/BNI/README.md)
@@ -203,10 +226,10 @@ Dokumentasi lengkap: [Docs/Bank/BNI/README.md](Docs/Bank/BNI/README.md)
 Service untuk enkripsi dan dekripsi data transaksi BNI Virtual Account secara manual.
 
 ```php
-use OjiePermana\Laravel\BNI\BNIEncryptServices;
+use OjiePermana\Laravel\Bank\BNI\Billing\BniBillingEncryptor;
 
-$hashed = BNIEncryptServices::Enc($data, $client_id, $secret_key);
-$result = BNIEncryptServices::Dec($hashed_string, $client_id, $secret_key);
+$hashed = BniBillingEncryptor::encryptPayload($data, $client_id, $secret_key);
+$result = BniBillingEncryptor::decryptPayload($hashed_string, $client_id, $secret_key);
 ```
 
 Dokumentasi lengkap: [Docs/Bank/BNI/README.md](Docs/Bank/BNI/README.md)
@@ -220,7 +243,6 @@ use Illuminate\Support\Facades\Storage;
 use OjiePermana\Laravel\Facades\GCS;
 
 // Upload file
-Storage::disk('gcs')->put('images/foto.jpg', $contents);
 GCS::putFile('uploads', $request->file('dokumen'));
 
 // URL publik

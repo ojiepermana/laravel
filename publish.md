@@ -124,10 +124,21 @@ Packagist otomatis mendeteksi tag baru jika webhook sudah terpasang.
 Tambahkan ke `.env`:
 
 ```env
-BNI_CLIENT_ID=001
-BNI_SECRET_KEY=ea0c88921fb033387e66ef7d1e82ab83
-BNI_PREFIX=8
-BNI_ECOLLECTION_URL=https://apibeta.bni-ecollection.com/
+# Billing (e-Collection)
+BNI_BILLING_CLIENT_ID=001
+BNI_BILLING_SECRET_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+BNI_BILLING_PREFIX=8
+BNI_BILLING_URL=https://apibeta.bni-ecollection.com/
+
+# Payment (OGP H2H v2)
+BNI_PAYMENT_BASE_URL=https://<host-payment>
+BNI_PAYMENT_OAUTH_URL=https://<host-payment>/api/oauth/token
+BNI_PAYMENT_CLIENT_ID=your-client-id
+BNI_PAYMENT_CLIENT_SECRET=your-client-secret
+BNI_PAYMENT_API_KEY=your-api-key
+BNI_PAYMENT_API_SECRET=your-api-secret
+BNI_PAYMENT_CLIENT_NAME=your-client-name
+BNI_PAYMENT_CLIENT_ID_PREFIX=IDBNI
 ```
 
 Service provider terdaftar otomatis via Laravel Package Auto-Discovery —

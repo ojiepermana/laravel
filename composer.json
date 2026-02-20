@@ -5,7 +5,8 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "OjiePermana\\Laravel\\": "src/"
+            "OjiePermana\\Laravel\\": "src/",
+            "Bank\\BNI\\Payment\\": "src/Bank/BNI/Payment/"
         },
         "files": [
             "src/Helpers/IndonesiaHelper.php"
@@ -16,9 +17,19 @@
             "OjiePermana\\Laravel\\Tests\\": "tests/"
         }
     },
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^10|^11|^12",
+        "maatwebsite/excel": "^3.1",
+        "google/cloud-storage": "^1.49",
+        "league/flysystem": "^3.0"
+    },
     "require-dev": {
         "phpunit/phpunit": "^11.0|^12.0",
         "orchestra/testbench": "^9.0|^10.0"
+    },
+    "suggest": {
+        "illuminate/support": "*"
     },
     "extra": {
         "laravel": {
@@ -30,12 +41,5 @@
                 "BNI": "OjiePermana\\Laravel\\Facades\\BNI"
             }
         }
-    },
-    "require": {
-        "php": "^8.1",
-        "illuminate/support": "^10|^11|^12",
-        "maatwebsite/excel": "^3.1",
-        "google/cloud-storage": "^1.49",
-        "league/flysystem": "^3.0"
     }
 }
