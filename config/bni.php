@@ -3,10 +3,10 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | BNI eCollection API Configuration
+    | BNI Billing (eCollection) Configuration
     |--------------------------------------------------------------------------
     |
-    | Credentials and endpoint for the BNI eCollection API.
+    | Credentials and endpoint for BNI eCollection (Virtual Account Billing).
     | All values should be set via environment variables.
     |
     */
@@ -17,6 +17,17 @@ return [
         'prefix' => env('BNI_BILLING_PREFIX'),
         'url' => env('BNI_BILLING_URL', ''),
     ],
+
+
+        /*
+    |--------------------------------------------------------------------------
+        | BNI Payment (OGP H2H v2) Configuration
+    |--------------------------------------------------------------------------
+    |
+        | Credentials and endpoint for BNI payment gateway (OGP H2H v2).
+    | All values should be set via environment variables.
+    |
+    */
 
     'payment' => [
         'base_url' => env('BNI_PAYMENT_BASE_URL'),
