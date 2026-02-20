@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use OjiePermana\Laravel\LaravelServiceProvider;
 use OjiePermana\Laravel\Storage\GoogleCloudStorageAdapter;
 use Orchestra\Testbench\TestCase;
+use RuntimeException;
 
 class GCSServiceProviderTest extends TestCase
 {
@@ -115,12 +116,49 @@ class GCSServiceProviderTest extends TestCase
     /** Binding 'gcs' menggunakan disk kustom ketika filesystems.gcs_default_disk dikonfigurasi */
     public function test_gcs_binding_uses_custom_default_disk(): void
     {
-        $this->app['config']->set('filesystems.disks.my-gcs-disk', $this->makeGcsDiskConfig());
-        $this->app['config']->set('filesystems.gcs_default_disk', 'my-gcs-disk');
+        $this->app['config']->set('filesystems.disks', [
+            'gcs-upload' => $this->makeGcsDiskConfig(['path_prefix' => 'upload']),
+            'gcs-generate' => $this->makeGcsDiskConfig(['path_prefix' => 'generate']),
+        ]);
+        $this->app['config']->set('filesystems.gcs_default_disk', 'gcs-generate');
 
         $gcs = $this->app->make('gcs');
+        $expectedDisk = Storage::disk('gcs-generate');
 
         $this->assertInstanceOf(FilesystemAdapter::class, $gcs);
+        $this->assertSame($expectedDisk, $gcs);
+    }
+
+    /** Binding 'gcs' auto-detect disk GCS pertama ketika filesystems.gcs_default_disk tidak dikonfigurasi */
+    public function test_gcs_binding_auto_detects_first_gcs_disk_when_default_disk_is_not_configured(): void
+    {
+        $this->app['config']->set('filesystems.disks', [
+            'local' => ['driver' => 'local', 'root' => __DIR__],
+            'gcs-upload' => $this->makeGcsDiskConfig(['path_prefix' => 'upload']),
+            'gcs-generate' => $this->makeGcsDiskConfig(['path_prefix' => 'generate']),
+        ]);
+        $this->app['config']->set('filesystems.gcs_default_disk', null);
+
+        $gcs = $this->app->make('gcs');
+        $expectedDisk = Storage::disk('gcs-upload');
+
+        $this->assertInstanceOf(FilesystemAdapter::class, $gcs);
+        $this->assertSame($expectedDisk, $gcs);
+    }
+
+    /** Binding 'gcs' melempar RuntimeException yang jelas ketika tidak ada disk GCS */
+    public function test_gcs_binding_throws_runtime_exception_when_no_gcs_disk_exists(): void
+    {
+        $this->app['config']->set('filesystems.disks', [
+            'local' => ['driver' => 'local', 'root' => __DIR__],
+            's3' => ['driver' => 's3', 'key' => 'x', 'secret' => 'y', 'region' => 'ap-southeast-1', 'bucket' => 'z'],
+        ]);
+        $this->app['config']->set('filesystems.gcs_default_disk', null);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unable to resolve GCS disk for binding [gcs]');
+
+        $this->app->make('gcs');
     }
 
     // ---------------------------------------------------------------

@@ -11,6 +11,7 @@ use League\Flysystem\Visibility;
 use OjiePermana\Laravel\Directives\CurrencyDirective;
 use OjiePermana\Laravel\Bank\BNI\Billing\BniBillingClient;
 use OjiePermana\Laravel\Storage\GoogleCloudStorageAdapter;
+use RuntimeException;
 
 class LaravelServiceProvider extends ServiceProvider
 {
@@ -69,8 +70,28 @@ class LaravelServiceProvider extends ServiceProvider
 
         // Bind 'gcs' to the default GCS disk so the GCS Facade works
         $this->app->singleton('gcs', function ($app) {
-            return $app['filesystem']->disk(
-                $app['config']->get('filesystems.gcs_default_disk', 'gcs')
+            $configuredDefaultDisk = $app['config']->get('filesystems.gcs_default_disk');
+
+            if (is_string($configuredDefaultDisk) && $configuredDefaultDisk !== '') {
+                return $app['filesystem']->disk($configuredDefaultDisk);
+            }
+
+            $disks = $app['config']->get('filesystems.disks', []);
+
+            if (is_array($disks)) {
+                foreach ($disks as $diskName => $diskConfig) {
+                    if (! is_array($diskConfig)) {
+                        continue;
+                    }
+
+                    if (($diskConfig['driver'] ?? null) === 'gcs') {
+                        return $app['filesystem']->disk($diskName);
+                    }
+                }
+            }
+
+            throw new RuntimeException(
+                "Unable to resolve GCS disk for binding [gcs]. Set [filesystems.gcs_default_disk] or define at least one disk in [filesystems.disks] with driver [gcs]."
             );
         });
     }
