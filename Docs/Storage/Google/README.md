@@ -642,7 +642,7 @@ try {
 
 ## Hasil Test
 
-Dijalankan dengan **PHPUnit 12** pada **PHP 8.1+**.
+Dijalankan dengan **PHPUnit 12** pada **PHP 8.1+** dan kompatibel dengan **Laravel 10-13**.
 
 ```
 PHPUnit by Sebastian Bergmann and contributors.

@@ -53,6 +53,12 @@ Maka di aplikasi bisa install:
 composer require ojiepermana/laravel:^1.0.0
 ```
 
+Untuk rilis kompatibilitas Laravel 13:
+
+```bash
+composer require ojiepermana/laravel:^13.0
+```
+
 ---
 
 ## Cara 2 — Publish ke Packagist (Cara Resmi)
@@ -102,7 +108,7 @@ composer require ojiepermana/laravel
 
 ## Versioning — Cara Buat Release Baru
 
-Format: `vMAJOR.MINOR.PATCH`
+Format: `MAJOR.MINOR.PATCH`
 
 | Jenis perubahan | Contoh |
 |---|---|
@@ -111,8 +117,8 @@ Format: `vMAJOR.MINOR.PATCH`
 | `MAJOR` — breaking change | `v1.0.0` → `v2.0.0` |
 
 ```bash
-git tag v1.0.0 -m "Release v1.0.0"
-git push origin v1.0.0
+git tag 13.0.0 -m "Release 13.0.0"
+git push origin 13.0.0
 ```
 
 Packagist otomatis mendeteksi tag baru jika webhook sudah terpasang.

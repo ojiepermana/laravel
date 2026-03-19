@@ -9,6 +9,8 @@ Paket utilitas Laravel berisi:
 - Service `BniBillingEncryptor` untuk enkripsi/dekripsi BNI e-Collection
 - **Google Cloud Storage** — Laravel filesystem adapter untuk GCS (`Storage::disk('gcs')`)
 
+Kompatibel dengan Laravel `10`, `11`, `12`, dan `13`.
+
 ## Instalasi
 
 ```bash
